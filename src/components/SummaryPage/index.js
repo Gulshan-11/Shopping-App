@@ -1,5 +1,7 @@
 import {Component} from 'react'
-import {db} from '../../firebase'
+import emailjs from 'emailjs-com'
+import {withRouter} from 'react-router-dom'
+import {auth} from '../../firebase'
 import './index.css'
 
 class SummaryPage extends Component {
@@ -14,13 +16,42 @@ class SummaryPage extends Component {
     },
   }
 
-  orderPlaced = () => {
-    // Shipping address in Firebase Realtime Database
-    const {shippingAddress} = this.state
-    const shippingAddressesRef = db.ref('shippingAddresses')
-    shippingAddressesRef.push(shippingAddress)
+  componentDidMount() {
+    emailjs.init('RCt2qZO52k0nwVov') // Initialize EmailJS with your user ID
+  }
 
-    this.setState({isOrderPlaced: true})
+  orderPlaced = async () => {
+    const {shippingAddress} = this.state
+    const orderData = JSON.parse(localStorage.getItem('cartItems'))
+    console.log(orderData)
+    const user = auth.currentUser
+    try {
+      if (user) {
+        const templateParams = {
+          userName: shippingAddress.name,
+          userEmail: user.email,
+          orderDetails: JSON.stringify(orderData, null, 2),
+        }
+
+        await emailjs.send(
+          'service_rs7hmv8',
+          'template_tvywhmr',
+          templateParams,
+        )
+      }
+      console.log('Order placed successfully')
+
+      this.setState({isOrderPlaced: true})
+      const existingOrderData =
+        JSON.parse(localStorage.getItem('orderItems')) || []
+      existingOrderData.push(orderData)
+      localStorage.setItem('orderItems', JSON.stringify(existingOrderData))
+
+      const {history} = this.props // Destructuring props
+      history.push('/myorders')
+    } catch (error) {
+      console.error('Error placing order:', error)
+    }
   }
 
   handleInputChange = event => {
@@ -145,4 +176,4 @@ class SummaryPage extends Component {
   }
 }
 
-export default SummaryPage
+export default withRouter(SummaryPage)

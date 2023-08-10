@@ -54,6 +54,7 @@ class Signup extends Component {
       return
     }
     createUserWithEmailAndPassword(auth, email, password).then(res => {
+      console.log(res.user.uid)
       this.onSubmitSuccess(res.user.uid)
     })
   }
