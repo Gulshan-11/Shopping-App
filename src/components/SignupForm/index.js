@@ -32,6 +32,8 @@ class Signup extends Component {
 
   onSubmitSuccess = jwtToken => {
     this.setState({redirectToLogin: true})
+    const authInfo = auth.currentUser
+    localStorage.setItem('authInfo', JSON.stringify(authInfo))
 
     // Store the JWT token in cookies
     Cookies.set('jwt_token', jwtToken, {
@@ -53,10 +55,18 @@ class Signup extends Component {
       this.onSubmitFailure("Passwords don't match")
       return
     }
-    createUserWithEmailAndPassword(auth, email, password).then(res => {
-      console.log(res.user.uid)
-      this.onSubmitSuccess(res.user.uid)
-    })
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      )
+      this.onSubmitSuccess(userCredential.user.uid)
+    } catch (error) {
+      // You can handle the error here, set an appropriate error message
+      this.onSubmitFailure(error.message)
+    }
   }
 
   render() {

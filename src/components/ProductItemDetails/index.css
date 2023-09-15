@@ -297,3 +297,32 @@
   align-items: center;
   flex-direction: column;
 }
+
+/* Popup styling */
+.product-added-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 10px;
+  border-radius: 4px;
+  display: none;
+  z-index: 9999;
+}
+
+/* Popup styling with animation */
+.product-added-popup {
+  /* ... previous styles ... */
+  animation: fade-in-out 0.5s ease-in-out;
+}
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0;
+  }
+  10%, 90% {
+    opacity: 1;
+  }
+}
+

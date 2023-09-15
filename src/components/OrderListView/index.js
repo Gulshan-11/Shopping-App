@@ -1,17 +1,12 @@
-import CartItem from '../CartItem'
+import OrderItem from '../OrderItem'
 import './index.css'
 
-const CartListView = ({cartList, setCartList}) => (
-  <ul className="cart-list">
-    {cartList.map(eachCartItem => (
-      <CartItem
-        key={eachCartItem.id}
-        cartItemDetails={eachCartItem}
-        cartList={cartList}
-        setCartList={setCartList}
-      />
+const OrderListView = ({orderList}) => (
+  <ul className="order-list">
+    {orderList.map(eachOrderItem => (
+      <OrderItem key={eachOrderItem.id} orderItemDetails={eachOrderItem} />
     ))}
   </ul>
 )
 
-export default CartListView
+export default OrderListView

@@ -11,7 +11,7 @@ import './index.css'
 class ProductItemDetails extends Component {
   state = {
     quantity: 1,
-    // showPopup: false,
+    showPopup: false,
   }
 
   renderLoadingView = () => (
@@ -48,7 +48,7 @@ class ProductItemDetails extends Component {
   }
 
   renderProductDetailsView = productData => {
-    const {quantity} = this.state
+    const {quantity, showPopup} = this.state
     const {brand, imageUrl, price, rating, title} = productData
 
     const onClickAddToCart = () => {
@@ -65,12 +65,13 @@ class ProductItemDetails extends Component {
       }
       localStorage.setItem('cartItems', JSON.stringify(existingCartData))
 
-      // this.setState({showPopup: true}) // Set showPopup to true to display the popup
+      this.setState({showPopup: true}) // Set showPopup to true to display the popup
 
-      // // Set a timeout to hide the popup after 3 seconds
-      // setTimeout(() => {
-      //   this.setState({showPopup: false})
-      // }, 3000)
+      // Set a timeout to hide the popup after 3 seconds
+      setTimeout(() => {
+        this.setState({showPopup: false})
+      }, 3000)
+      window.location.reload()
     }
 
     return (
@@ -128,6 +129,11 @@ class ProductItemDetails extends Component {
             </button>
           </Link>
         </div>
+        {showPopup && (
+          <div className="product-added-popup">
+            Product has been added to cart
+          </div>
+        )}
       </div>
     )
   }

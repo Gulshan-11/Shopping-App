@@ -1,8 +1,10 @@
 import {Component} from 'react'
 import emailjs from 'emailjs-com'
 import {withRouter} from 'react-router-dom'
+import {getFirestore, collection, doc, setDoc, getDoc} from 'firebase/firestore'
 import {auth} from '../../firebase'
 import './index.css'
+import 'dotenv/config'
 
 class SummaryPage extends Component {
   state = {
@@ -17,14 +19,16 @@ class SummaryPage extends Component {
   }
 
   componentDidMount() {
-    emailjs.init('RCt2qZO52k0nwVov') // Initialize EmailJS with your user ID
+    emailjs.init('RCt2qZO52k0nwVovW') // Initialize EmailJS with your user ID
   }
 
   orderPlaced = async () => {
+    const {total, items} = this.props
     const {shippingAddress} = this.state
     const orderData = JSON.parse(localStorage.getItem('cartItems'))
-    console.log(orderData)
     const user = auth.currentUser
+    console.log(user)
+
     try {
       if (user) {
         const templateParams = {
@@ -38,14 +42,40 @@ class SummaryPage extends Component {
           'template_tvywhmr',
           templateParams,
         )
+
+        // Store order details in Firestore
+        const firestore = getFirestore()
+        const orderCollectionRef = collection(firestore, 'orderDetails')
+        const orderDocumentRef = doc(orderCollectionRef, user.uid)
+
+        const orderDocumentSnapshot = await getDoc(orderDocumentRef)
+
+        let existingOrderItems = []
+        if (orderDocumentSnapshot.exists()) {
+          const existingOrderData = orderDocumentSnapshot.data()
+          existingOrderItems = existingOrderData.orders || []
+        }
+
+        const newOrder = {
+          id: new Date().getTime(), // Unique ID based on timestamp
+          timestamp: new Date(),
+          orderItems: orderData,
+          totalPrice: total,
+          itemsOrdered: items,
+          shippingAddress: {...shippingAddress},
+        }
+
+        const updatedOrderItems = [newOrder, ...existingOrderItems]
+
+        await setDoc(orderDocumentRef, {
+          orders: updatedOrderItems,
+        })
       }
+
       console.log('Order placed successfully')
 
       this.setState({isOrderPlaced: true})
-      const existingOrderData =
-        JSON.parse(localStorage.getItem('orderItems')) || []
-      existingOrderData.push(orderData)
-      localStorage.setItem('orderItems', JSON.stringify(existingOrderData))
+      localStorage.removeItem('cartItems')
 
       const {history} = this.props // Destructuring props
       history.push('/myorders')

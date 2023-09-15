@@ -25,6 +25,8 @@ class LoginForm extends Component {
 
   onSubmitSuccess = jwtToken => {
     const {history} = this.props
+    const authInfo = auth.currentUser
+    localStorage.setItem('authInfo', JSON.stringify(authInfo))
 
     Cookies.set('jwt_token', jwtToken, {
       expires: 30,
@@ -32,28 +34,30 @@ class LoginForm extends Component {
     history.replace('/')
   }
 
+  onSubmitFailure = errorMsg => {
+    this.setState({showSubmitError: true, errorMsg})
+  }
+
   submitForm = async event => {
     event.preventDefault()
     const {email, password} = this.state
 
     if (email === '' || password === '') {
-      this.setState({
-        showSubmitError: true,
-        errorMsg: 'All fields are required',
-      })
+      this.onSubmitFailure('Please enter all the fields')
+      return
     }
 
     try {
       // Sign in the user using Firebase Authentication
-      signInWithEmailAndPassword(auth, email, password).then(res => {
-        this.onSubmitSuccess(res.user.uid)
-      })
+      signInWithEmailAndPassword(auth, email, password)
+        .then(res => {
+          this.onSubmitSuccess(res.user.uid)
+        })
+        .catch(error => {
+          this.onSubmitFailure(error.message)
+        })
     } catch (error) {
-      console.error('Login error:', error)
-      this.setState({
-        showSubmitError: true,
-        errorMsg: 'Invalid credentials',
-      })
+      this.onSubmitFailure(error.message)
     }
   }
 
