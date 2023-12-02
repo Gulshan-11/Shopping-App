@@ -7,11 +7,11 @@
   flex-direction: column;
   flex-wrap: wrap;
 }
-.container{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
 }
 .footer-section {
   max-width: 200px;

@@ -10,14 +10,14 @@
   max-width: 1110px;
 }
 
-.welcome{
+.welcome {
   color: #0967d2;
   font-family: 'Roboto';
   font-weight: 500;
   font-size: 18px;
   line-height: 1.5;
   text-align: center;
-  margin:10px,0,0,0;
+  margin: 10px, 0, 0, 0;
   padding: 0;
 }
 
