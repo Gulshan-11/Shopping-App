@@ -84,6 +84,11 @@ const Header = props => {
                 Cart {renderCartItemsCount()}
               </Link>
             </li>
+            <li className="nav-menu-item">
+              <Link to="/mydetails" className="nav-link">
+                Me
+              </Link>
+            </li>
           </ul>
           <button
             type="button"
@@ -116,6 +121,11 @@ const Header = props => {
             <Link to="/cart" className="nav-link">
               <p>Cart</p>
               {renderCartItemsCount()}
+            </Link>
+          </li>
+          <li className="nav-menu-item-mobile">
+            <Link to="/mydetails" className="nav-link">
+              <p>Me</p>
             </Link>
           </li>
         </ul>

@@ -2,6 +2,9 @@ import {Component} from 'react'
 import emailjs from 'emailjs-com'
 import {withRouter} from 'react-router-dom'
 import {getFirestore, collection, doc, setDoc, getDoc} from 'firebase/firestore'
+import html2pdf from 'html2pdf.js'
+import ReactDOMServer from 'react-dom/server'
+import InvoiceComponent from '../InvoiceComponent'
 import {auth} from '../../firebase'
 import './index.css'
 import 'dotenv/config'
@@ -9,6 +12,7 @@ import 'dotenv/config'
 class SummaryPage extends Component {
   state = {
     isOrderPlaced: false,
+    isLoading: false,
     shippingAddress: {
       name: '',
       address: '',
@@ -22,6 +26,34 @@ class SummaryPage extends Component {
     emailjs.init('RCt2qZO52k0nwVovW') // Initialize EmailJS with your user ID
   }
 
+  generatePDF = async () => {
+    try {
+      console.log('Generating pdf..........')
+      const invoiceDetails = JSON.parse(localStorage.getItem('cartItems'))
+      const {shippingAddress} = this.state
+      const Invoice = (
+        <InvoiceComponent
+          invoiceDetails={invoiceDetails}
+          shippingAddress={shippingAddress}
+        />
+      )
+      const htmlString = ReactDOMServer.renderToString(Invoice)
+      const opt = {
+        margin: 0.5,
+        filename: 'invoice.pdf',
+        image: {type: 'jpeg', quality: 0.98},
+        html2canvas: {scale: 2},
+        jsPDF: {unit: 'in', format: 'letter', orientation: 'portrait'},
+      }
+      await html2pdf().set(opt).from(htmlString).save()
+      // const pdfBlob = await html2pdf().set(opt).from(htmlString).outputPdf()
+      console.log('PDF Generated successfully ')
+    } catch (e) {
+      console.error(e)
+      // return null
+    }
+  }
+
   orderPlaced = async () => {
     const {total, items} = this.props
     const {shippingAddress} = this.state
@@ -31,18 +63,7 @@ class SummaryPage extends Component {
 
     try {
       if (user) {
-        const templateParams = {
-          userName: shippingAddress.name,
-          userEmail: user.email,
-          orderDetails: JSON.stringify(orderData, null, 2),
-        }
-
-        await emailjs.send(
-          'service_rs7hmv8',
-          'template_tvywhmr',
-          templateParams,
-        )
-
+        this.setState({isLoading: true})
         // Store order details in Firestore
         const firestore = getFirestore()
         const orderCollectionRef = collection(firestore, 'orderDetails')
@@ -56,6 +77,8 @@ class SummaryPage extends Component {
           existingOrderItems = existingOrderData.orders || []
         }
 
+        await this.generatePDF()
+
         const newOrder = {
           id: new Date().getTime(), // Unique ID based on timestamp
           timestamp: new Date(),
@@ -63,6 +86,8 @@ class SummaryPage extends Component {
           totalPrice: total,
           itemsOrdered: items,
           shippingAddress: {...shippingAddress},
+          status: 'Order Placed',
+          // invoice: pdfBase64, // Store base64 string instead of Blob
         }
 
         const updatedOrderItems = [newOrder, ...existingOrderItems]
@@ -70,9 +95,8 @@ class SummaryPage extends Component {
         await setDoc(orderDocumentRef, {
           orders: updatedOrderItems,
         })
+        console.log('Order placed successfully')
       }
-
-      console.log('Order placed successfully')
 
       this.setState({isOrderPlaced: true})
       localStorage.removeItem('cartItems')
@@ -81,8 +105,18 @@ class SummaryPage extends Component {
       history.push('/myorders')
     } catch (error) {
       console.error('Error placing order:', error)
+    } finally {
+      this.setState({isLoading: false})
     }
   }
+
+  // blobToBase64 = blob =>
+  //   new Promise((resolve, reject) => {
+  //     const reader = new FileReader()
+  //     reader.onloadend = () => resolve(reader.result.split(',')[1])
+  //     reader.onerror = reject
+  //     reader.readAsDataURL(blob)
+  //   })
 
   handleInputChange = event => {
     const {name, value} = event.target
@@ -96,7 +130,7 @@ class SummaryPage extends Component {
 
   render() {
     const {total, items} = this.props
-    const {isOrderPlaced, shippingAddress} = this.state
+    const {isOrderPlaced, shippingAddress, isLoading} = this.state
 
     return (
       <div className="summary-page">
@@ -192,8 +226,9 @@ class SummaryPage extends Component {
             type="submit"
             className="submit-button"
             onClick={this.orderPlaced}
+            disabled={isLoading}
           >
-            Confirm Order
+            {isLoading ? 'Placing Order...' : 'Confirm Order'}
           </button>
         </div>
         {isOrderPlaced && (

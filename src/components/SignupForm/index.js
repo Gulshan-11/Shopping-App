@@ -6,7 +6,8 @@ import {createUserWithEmailAndPassword} from 'firebase/auth'
 import {Link} from 'react-router-dom/cjs/react-router-dom.min'
 
 import './index.css'
-import {auth} from '../../firebase'
+import {collection, doc, setDoc} from 'firebase/firestore'
+import {auth, db} from '../../firebase'
 
 class Signup extends Component {
   state = {
@@ -32,6 +33,9 @@ class Signup extends Component {
 
   onSubmitSuccess = jwtToken => {
     this.setState({redirectToLogin: true})
+    const {email} = this.state
+    const name = 'Not Available'
+    const phone = 'Not Available'
     const authInfo = auth.currentUser
     localStorage.setItem('authInfo', JSON.stringify(authInfo))
 
@@ -39,6 +43,9 @@ class Signup extends Component {
     Cookies.set('jwt_token', jwtToken, {
       expires: 30,
     })
+    const users = collection(db, 'users')
+    const docRef = doc(users, email)
+    setDoc(docRef, {name, phone, email}, {merge: true})
     const {history} = this.props
     history.push('/')
   }

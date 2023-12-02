@@ -25,13 +25,20 @@ class LoginForm extends Component {
 
   onSubmitSuccess = jwtToken => {
     const {history} = this.props
+    const {email} = this.state
     const authInfo = auth.currentUser
-    localStorage.setItem('authInfo', JSON.stringify(authInfo))
 
+    localStorage.setItem('authInfo', JSON.stringify(authInfo))
+    console.log('onSubmitSuccess function')
     Cookies.set('jwt_token', jwtToken, {
       expires: 30,
     })
-    history.replace('/')
+    if (email === 'gchandnani1103@gmail.com') {
+      console.log('if condition')
+      history.replace('/admin')
+    } else {
+      history.replace('/')
+    }
   }
 
   onSubmitFailure = errorMsg => {
